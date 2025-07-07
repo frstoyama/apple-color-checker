@@ -1,72 +1,40 @@
-<!DOindeCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>葉色推定ツール</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            padding: 20px;
-            background-color: #f9f9ff;
-        }
-        h1 {
-            font-size: 28px;
-        }
-        form {
-            margin-bottom: 20px;
-        }
-        input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-        button {
-            padding: 15px;
-            font-size: 18px;
-            width: 100%;
-            background-color: #eee;
-            border: none;
-            cursor: pointer;
-        }
-        .result {
-            background-color: #eef;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-            font-size: 16px;
-        }
-        .chart {
-            margin-top: 20px;
-        }
-    </style>
+    <title>リンゴ葉色CC評価ツール</title>
 </head>
 <body>
-    <h1>🍏 葉色推定ツール</h1>
-
+    <h1>リンゴ葉色CC評価ツール</h1>
     <form method="post">
-        <label for="L">L* 値：</label>
-        <input type="text" id="L" name="L" required>
-
-        <label for="a">a* 値：</label>
-        <input type="text" id="a" name="a" required>
-
-        <label for="b">b* 値：</label>
-        <input type="text" id="b" name="b" required>
-
-        <button type="submit">分類する</button>
+        <label for="L">L値:</label>
+        <input type="number" step="0.01" name="L" required><br>
+        <label for="a">a値:</label>
+        <input type="number" step="0.01" name="a" required><br>
+        <label for="b">b値:</label>
+        <input type="number" step="0.01" name="b" required><br>
+        <input type="submit" value="評価">
     </form>
 
-    {% if result %}
-        <div class="result">
-            この葉は <strong>CC値 {{ result.level }}</strong> に最も近いです。<br><br>
-            ΔE（色差） = {{ result.delta_e }}<br>
-            基準Lab値: L*={{ result.ref_lab[0] }}, a*={{ result.ref_lab[1] }}, b*={{ result.ref_lab[2] }}
-        </div>
+    {% if cc_value is not none and cc_value_excel is not none %}
+        <h2>結果</h2>
+        <p>入力値: L={{ input_lab[0] }}, a={{ input_lab[1] }}, b={{ input_lab[2] }}</p>
+        <p>推定CC値（標準値に基づく）: <strong>{{ cc_value }}</strong></p>
+        <p>推定CC値（Excelファイルに基づく）: <strong>{{ cc_value_excel }}</strong></p>
 
-        <div class="chart">
-            <img src="{{ url_for('plot_png') }}" alt="散布図">
-        </div>
+        <h3>ΔE（色差）一覧（標準値）</h3>
+        <ul>
+        {% for level, delta in delta_e_std.items() %}
+            <li>CC{{ level }}: ΔE = {{ delta|round(2) }}</li>
+        {% endfor %}
+        </ul>
+
+        <h3>ΔE（色差）一覧（Excel値）</h3>
+        <ul>
+        {% for level, delta in delta_e_excel.items() %}
+            <li>CC{{ level }}: ΔE = {{ delta|round(2) }}</li>
+        {% endfor %}
+        </ul>
     {% endif %}
 </body>
 </html>
