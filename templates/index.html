@@ -5,68 +5,68 @@
     <title>葉色分類ツール</title>
     <style>
         body {
-            font-family: 'Segoe UI', sans-serif;
-            margin: 40px;
-            background-color: #ffffff;
+            font-family: 'Arial', sans-serif;
+            padding: 20px;
+            background-color: #f9f9ff;
         }
         h1 {
-            font-size: 2em;
+            font-size: 28px;
         }
         form {
-            margin-bottom: 30px;
-        }
-        label {
-            display: block;
-            margin-top: 10px;
+            margin-bottom: 20px;
         }
         input[type="text"] {
             width: 100%;
             padding: 10px;
-            font-size: 1em;
+            margin-bottom: 10px;
+            font-size: 16px;
         }
         button {
-            margin-top: 20px;
             padding: 15px;
-            font-size: 1.2em;
+            font-size: 18px;
             width: 100%;
+            background-color: #eee;
+            border: none;
+            cursor: pointer;
         }
         .result {
-            margin-top: 30px;
-            background-color: #f0f0ff;
+            background-color: #eef;
             padding: 20px;
             border-radius: 10px;
-        }
-        img {
             margin-top: 20px;
-            max-width: 100%;
-            height: auto;
-            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+        .chart {
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
     <h1>🍏 葉色分類ツール</h1>
 
-    <form method="POST">
+    <form method="post">
         <label for="L">L* 値：</label>
-        <input type="text" name="L" id="L" required>
+        <input type="text" id="L" name="L" required>
 
         <label for="a">a* 値：</label>
-        <input type="text" name="a" id="a" required>
+        <input type="text" id="a" name="a" required>
 
         <label for="b">b* 値：</label>
-        <input type="text" name="b" id="b" required>
+        <input type="text" id="b" name="b" required>
 
         <button type="submit">分類する</button>
     </form>
 
     {% if result %}
-    <div class="result">
-        <p>この葉は <strong>レベル {{ result.level }}</strong> に最も近いです。</p>
-        <p>ΔE（色差）＝ {{ result.delta_e }}</p>
-        <p>基準Lab値: L*={{ result.std_L }}, a*={{ result.std_a }}, b*={{ result.std_b }}</p>
-    </div>
-    <img src="{{ url_for('static', filename='plot.png') }}" alt="測定点と基準値の散布図">
+        <div class="result">
+            この葉は <strong>CC値 {{ result.level }}</strong> に最も近いです。<br><br>
+            ΔE（色差） = {{ result.delta_e }}<br>
+            基準Lab値: L*={{ result.ref_lab[0] }}, a*={{ result.ref_lab[1] }}, b*={{ result.ref_lab[2] }}
+        </div>
+
+        <div class="chart">
+            <img src="{{ url_for('plot_png') }}" alt="散布図">
+        </div>
     {% endif %}
 </body>
 </html>
