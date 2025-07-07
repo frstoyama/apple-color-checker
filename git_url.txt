@@ -1,0 +1,22 @@
+Git Bash 上での操作コマンド一覧
+スタートメニューで「Git Bash」を検索して起動
+✅ 方法①：Shift + Insert（おすすめ）
+コピーしたいコマンドをCtrl+Cでコピー
+
+Git Bashにカーソルを合わせて
+
+Shift + Insert を押すと貼り付きます
+
+
+
+cd /d/03_apple_cc/20250707
+git init
+
+
+
+git init
+git add .
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/frstoyama/apple-color-checker.git
+git push -u origin main
