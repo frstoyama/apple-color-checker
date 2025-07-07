@@ -1,75 +1,91 @@
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request
 import pandas as pd
-from sklearn.metrics import pairwise_distances
-import matplotlib.pyplot as plt
-import io
+import numpy as np
+from colormath.color_objects import LabColor
+from colormath.color_diff import delta_e_cie1976
+import os
 
 app = Flask(__name__)
 
-# 基準Lab値（葉色インデックス1〜8）
-ref_data = pd.DataFrame({
-    'level': [1, 2, 3, 4, 5, 6, 7, 8],
-    'L': [51.8, 47.8, 43.3, 39.9, 38.0, 35.5, 32.2, 30.5],
-    'a': [-18.1, -16.9, -14.6, -14.7, -12.1, -10.8, -7.9, -6.2],
-    'b': [30.7, 27.1, 22.5, 18.6, 15.0, 13.6, 8.7, 5.8]
-})
+# CC値とLab値の対応表（1〜8）
+standard_lab_values = {
+    1: (51.8, -18.1, 30.7),
+    2: (47.8, -16.9, 27.1),
+    3: (43.3, -14.6, 22.5),
+    4: (39.9, -14.7, 18.6),
+    5: (38.0, -12.1, 15.0),
+    6: (35.5, -10.8, 13.6),
+    7: (32.2, -7.9, 8.7),
+    8: (30.5, -6.2, 5.8),
+}
 
-# グローバル変数で測定値を保持
-last_input = {'L': None, 'a': None, 'b': None}
+# ExcelファイルからLab値を読み込む関数
+def load_excel_lab_values(filepath):
+    df = pd.read_excel(filepath)
+    lab_dict = {}
+    for _, row in df.iterrows():
+        level = int(row['CC'])
+        lab_dict[level] = (row['L'], row['a'], row['b'])
+    return lab_dict
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    result = None
+    cc_value = None
+    cc_value_excel = None
+    input_lab = (None, None, None)
+
     if request.method == 'POST':
         try:
             L = float(request.form['L'])
             a = float(request.form['a'])
             b = float(request.form['b'])
-            last_input['L'] = L
-            last_input['a'] = a
-            last_input['b'] = b
+            input_lab = (L, a, b)
+            input_color = LabColor(L, a, b)
 
-            # 距離（ΔE）を計算
-            input_lab = [[L, a, b]]
-            ref_lab = ref_data[['L', 'a', 'b']].values
-            distances = pairwise_distances(input_lab, ref_lab)[0]
-            min_index = distances.argmin()
+            # 通常のCC値計算
+            deltas_std = {}
+            for level, (l, a_, b_) in standard_lab_values.items():
+                std_color = LabColor(l, a_, b_)
+                delta = delta_e_cie1976(input_color, std_color)
+                deltas_std[level] = delta
 
-            result = {
-                'level': int(ref_data.loc[min_index, 'level']),
-                'delta_e': round(distances[min_index], 2),
-                'ref_lab': tuple(round(x, 2) for x in ref_lab[min_index])
-            }
-        except:
-            result = None
+            sorted_std = sorted(deltas_std.items(), key=lambda x: x[1])
+            cc_low, d_low = sorted_std[0]
+            cc_high, d_high = sorted_std[1]
+            if d_low + d_high > 0:
+                ratio = d_high / (d_low + d_high)
+                interpolated_cc = cc_low * ratio + cc_high * (1 - ratio)
+            else:
+                interpolated_cc = float(cc_low)
+            cc_value = round(interpolated_cc, 1)
 
-    return render_template('index.html', result=result)
+            # Excelに基づくCC値計算
+            excel_path = os.path.join(os.path.dirname(__file__), 'ColorReaderPro_Apple_CC.xlsx')
+            if os.path.exists(excel_path):
+                excel_lab_values = load_excel_lab_values(excel_path)
+                deltas_excel = {}
+                for level, (l, a_, b_) in excel_lab_values.items():
+                    std_color = LabColor(l, a_, b_)
+                    delta = delta_e_cie1976(input_color, std_color)
+                    deltas_excel[level] = delta
 
+                sorted_excel = sorted(deltas_excel.items(), key=lambda x: x[1])
+                cc_low, d_low = sorted_excel[0]
+                cc_high, d_high = sorted_excel[1]
+                if d_low + d_high > 0:
+                    ratio = d_high / (d_low + d_high)
+                    interpolated_cc_excel = cc_low * ratio + cc_high * (1 - ratio)
+                else:
+                    interpolated_cc_excel = float(cc_low)
+                cc_value_excel = round(interpolated_cc_excel, 1)
+            else:
+                cc_value_excel = 'Excelファイルが見つかりません'
 
-@app.route('/plot.png')
-def plot_png():
-    fig, ax = plt.subplots()
-    # 散布図（基準）
-    ax.scatter(ref_data['a'], ref_data['b'], c='blue', label='基準値')
+        except ValueError:
+            cc_value = '入力エラー'
+            cc_value_excel = '入力エラー'
 
-    # 測定値（赤）
-    if all(v is not None for v in last_input.values()):
-        ax.scatter(last_input['a'], last_input['b'], c='red', marker='*', s=200, label='測定値')
-        ax.annotate(f"L={last_input['L']:.1f}, a={last_input['a']:.1f}, b={last_input['b']:.1f}",
-                    (last_input['a'], last_input['b']),
-                    textcoords="offset points", xytext=(30, 0), ha='left', fontsize=10, color='black')
-
-    ax.set_xlabel('a*')
-    ax.set_ylabel('b*')
-    ax.set_title('a*-b* 散布図')
-    ax.legend()
-    ax.grid(True)
-
-    buf = io.BytesIO()
-    fig.savefig(buf, format='png')
-    plt.close(fig)
-    buf.seek(0)
-    return send_file(buf, mimetype='image/png')
+    return render_template('index.html', cc_value=cc_value, cc_value_excel=cc_value_excel, input_lab=input_lab)
 
 if __name__ == '__main__':
     app.run(debug=True)
