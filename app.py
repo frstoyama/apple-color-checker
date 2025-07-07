@@ -1,80 +1,75 @@
-import base64
-import io
+from flask import Flask, render_template, request, send_file
 import pandas as pd
+from sklearn.metrics import pairwise_distances
 import matplotlib.pyplot as plt
-from flask import Flask, render_template, request
+import io
 
 app = Flask(__name__)
 
-# CCごとの基準a*, b*値（表に基づく） ハックナインの論文の値を参考とする　chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://www.hro.or.jp/upload/16360/75-2.pdf
-CC_DATA = {
-    1: (-18.1, 30.7),
-    2: (-16.9, 27.1),
-    3: (-14.6, 22.5),
-    4: (-14.7, 18.6),
-    5: (-12.1, 15.0),
-    6: (-10.8, 13.6),
-    7: (-7.9, 8.7),
-    8: (-6.2, 5.8),
-}
+# 基準Lab値（葉色インデックス1〜8）
+ref_data = pd.DataFrame({
+    'level': [1, 2, 3, 4, 5, 6, 7, 8],
+    'L': [51.8, 47.8, 43.3, 39.9, 38.0, 35.5, 32.2, 30.5],
+    'a': [-18.1, -16.9, -14.6, -14.7, -12.1, -10.8, -7.9, -6.2],
+    'b': [30.7, 27.1, 22.5, 18.6, 15.0, 13.6, 8.7, 5.8]
+})
+
+# グローバル変数で測定値を保持
+last_input = {'L': None, 'a': None, 'b': None}
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     result = None
-    image_base64 = None
-
     if request.method == 'POST':
         try:
             L = float(request.form['L'])
             a = float(request.form['a'])
             b = float(request.form['b'])
+            last_input['L'] = L
+            last_input['a'] = a
+            last_input['b'] = b
 
-            # もっとも近いCC値をユークリッド距離で判定
-            min_dist = float('inf')
-            closest_cc = None
-            for cc, (cc_a, cc_b) in CC_DATA.items():
-                dist = ((a - cc_a)**2 + (b - cc_b)**2)**0.5
-                if dist < min_dist:
-                    min_dist = dist
-                    closest_cc = cc
+            # 距離（ΔE）を計算
+            input_lab = [[L, a, b]]
+            ref_lab = ref_data[['L', 'a', 'b']].values
+            distances = pairwise_distances(input_lab, ref_lab)[0]
+            min_index = distances.argmin()
 
-            result = f"CC値 {closest_cc}（最も近い基準値）"
+            result = {
+                'level': int(ref_data.loc[min_index, 'level']),
+                'delta_e': round(distances[min_index], 2),
+                'ref_lab': tuple(round(x, 2) for x in ref_lab[min_index])
+            }
+        except:
+            result = None
 
-            # 散布図生成
-            fig, ax = plt.subplots(figsize=(7, 6))
-            for cc, (cc_a, cc_b) in CC_DATA.items():
-                ax.scatter(cc_a, cc_b, color='blue')
-                ax.text(cc_a + 0.3, cc_b, f"CC{cc}", fontsize=10)
+    return render_template('index.html', result=result)
 
-            ax.scatter(a, b, color='red', marker='*', s=200, label='測定値')
-            ax.annotate(
-                f"測定値\nL={L:.1f}\na={a:.1f}\nb={b:.1f}",
-                xy=(a, b),
-                xytext=(-5, 35),
-                textcoords="data",
-                arrowprops=dict(arrowstyle="->", color='gray'),
-                fontsize=10,
-                bbox=dict(boxstyle="round,pad=0.3", edgecolor="gray", facecolor="white", alpha=0.8)
-            )
 
-            ax.set_xlabel('a*')
-            ax.set_ylabel('b*')
-            ax.set_title('a*-b* 平面におけるCC基準と測定値')
-            ax.grid(True)
-            ax.invert_xaxis()
-            plt.tight_layout()
+@app.route('/plot.png')
+def plot_png():
+    fig, ax = plt.subplots()
+    # 散布図（基準）
+    ax.scatter(ref_data['a'], ref_data['b'], c='blue', label='基準値')
 
-            # 画像をbase64でエンコード
-            buf = io.BytesIO()
-            plt.savefig(buf, format='png')
-            buf.seek(0)
-            image_base64 = base64.b64encode(buf.read()).decode('utf-8')
-            plt.close()
+    # 測定値（赤）
+    if all(v is not None for v in last_input.values()):
+        ax.scatter(last_input['a'], last_input['b'], c='red', marker='*', s=200, label='測定値')
+        ax.annotate(f"L={last_input['L']:.1f}, a={last_input['a']:.1f}, b={last_input['b']:.1f}",
+                    (last_input['a'], last_input['b']),
+                    textcoords="offset points", xytext=(30, 0), ha='left', fontsize=10, color='black')
 
-        except Exception as e:
-            result = f"エラー: {str(e)}"
+    ax.set_xlabel('a*')
+    ax.set_ylabel('b*')
+    ax.set_title('a*-b* 散布図')
+    ax.legend()
+    ax.grid(True)
 
-    return render_template('index.html', result=result, image=image_base64)
+    buf = io.BytesIO()
+    fig.savefig(buf, format='png')
+    plt.close(fig)
+    buf.seek(0)
+    return send_file(buf, mimetype='image/png')
 
 if __name__ == '__main__':
     app.run(debug=True)

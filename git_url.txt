@@ -32,6 +32,13 @@ git push
 
 
 
+★修正後、再度UPするときgit
+cd /d/03_apple_cc/20250707
+git add .
+git commit -m "必要なファイルの更新と追加・削除"
+git push origin main
+
+
 
 
 ★Web Service★
