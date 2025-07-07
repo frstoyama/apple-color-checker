@@ -12,11 +12,38 @@ Shift + Insert を押すと貼り付きます
 cd /d/03_apple_cc/20250707
 git init
 
+# 🔽 ここで一度だけ設定すればOK！
+git config --global user.name "frstoyama"
+git config --global user.email "frstoyama@gmail.com"
 
-
-git init
+git config --global --add safe.directory D:/03_apple_cc/20250707
 git add .
 git commit -m "first commit"
 git branch -M main
 git remote add origin https://github.com/frstoyama/apple-color-checker.git
 git push -u origin main
+
+git add requirements.txt
+git commit -m "Add requirements.txt"
+
+git add ColorReaderPro_Apple_CC.xlsx
+git commit -m "Add Excel data file"
+git push
+
+
+
+
+
+★Web Service★
+https://dashboard.render.com/web/srv-d1lremili9vc73e9vl60/deploys/dep-d1lrjf2li9vc73ea3i9g
+apple-color-checker
+Python 3
+Free
+Upgrade your instance
+
+Connect
+
+Manual Deploy
+frstoyama / apple-color-checker
+main
+https://apple-color-checker.onrender.com

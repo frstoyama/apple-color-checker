@@ -1,38 +1,63 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>葉色分類ツール</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body { font-family: sans-serif; max-width: 600px; margin: 2em auto; padding: 1em; }
-    input { width: 100%; padding: 0.5em; margin-bottom: 1em; }
-    button { width: 100%; padding: 1em; font-size: 1.2em; }
-    .result { background: #eef; padding: 1em; border-radius: 0.5em; margin-top: 1em; }
-  </style>
+    <meta charset="UTF-8">
+    <title>葉色診断ツール</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 40px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        label {
+            display: inline-block;
+            width: 50px;
+        }
+        input[type="text"] {
+            padding: 5px;
+            width: 80px;
+            margin-right: 10px;
+        }
+        input[type="submit"] {
+            padding: 5px 15px;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #27ae60;
+        }
+        .chart {
+            margin-top: 30px;
+        }
+    </style>
 </head>
 <body>
-  <h1>🍏 葉色分類ツール</h1>
-  <form method="post">
-    <label>L* 値：</label>
-    <input type="text" name="L" required>
-    <label>a* 値：</label>
-    <input type="text" name="a" required>
-    <label>b* 値：</label>
-    <input type="text" name="b" required>
-    <button type="submit">分類する</button>
-  </form>
+    <h1>🍏 葉色診断ツール（a*-b* 散布図）</h1>
 
-  {% if result %}
-    <div class="result">
-      {% if result is string %}
-        <p>{{ result }}</p>
-      {% else %}
-        <p>この葉は <strong>レベル {{ result.level }}</strong> に最も近いです。</p>
-        <p>ΔE（色差） = {{ result.deltaE }}</p>
-        <p>基準Lab値: L*={{ result.matched[0] }}, a*={{ result.matched[1] }}, b*={{ result.matched[2] }}</p>
-      {% endif %}
-    </div>
-  {% endif %}
+    <form method="post">
+        <label for="L">L:</label>
+        <input type="text" name="L" required>
+        <label for="a">a:</label>
+        <input type="text" name="a" required>
+        <label for="b">b:</label>
+        <input type="text" name="b" required>
+        <input type="submit" value="診断">
+    </form>
+
+    {% if result %}
+        <div class="result">📊 判定結果: <strong>{{ result }}</strong></div>
+    {% endif %}
+
+    {% if image %}
+        <div class="chart">
+            <img src="data:image/png;base64,{{ image }}" alt="a*-b* 散布図">
+        </div>
+    {% endif %}
 </body>
 </html>

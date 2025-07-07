@@ -3,3 +3,4 @@ pandas
 openpyxl
 gunicorn
 scikit-learn
+matplotlib
