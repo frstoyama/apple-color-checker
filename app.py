@@ -61,11 +61,11 @@ def index():
                 delta_list_direct=delta_list_direct,
                 cc_value_excel=cc_value_excel,
                 closest_excel=closest_excel,
-                delta_list_excel=delta_list_excel
+                delta_list_excel=delta_list_excel,
                 max_len=max_len
             )
         except ValueError:
-            return render_template("index.html", input_lab=None, error="入力値に誤りがあります。")
+            return render_template("error.html", message="入力値に誤りがあります。")
 
     # GET時に必ずHTMLを返す
     return render_template("index.html", input_lab=None)
