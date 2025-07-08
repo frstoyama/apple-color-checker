@@ -4,72 +4,69 @@ import math
 
 app = Flask(__name__)
 
-# ─────────────────────────────
-# ExcelからのCC基準値の読み込み
-# ─────────────────────────────
-excel_df = pd.read_excel("ColorReaderPro_Apple_CC.xlsx")
-cc_lab_excel = []
-for i, row in excel_df.iterrows():
-    cc_lab_excel.append({
-        "cc": i + 1,
-        "L": row["L"],
-        "a": row["a"],
-        "b": row["b"]
-    })
+# ΔE（CIE76）を計算する関数
+def calculate_delta_e(lab1, lab2):
+    return round(math.sqrt(sum((a - b) ** 2 for a, b in zip(lab1, lab2))), 1)
 
-# ─────────────────────────────
-# 手入力で与えた基準値
-# ─────────────────────────────
+# 直接定義された基準Lab値（CC値1～8）
 standard_lab_list = [
-    {"cc": 1, "L": 80.2, "a": -16.3, "b": 30.3},
-    {"cc": 2, "L": 73.5, "a": -14.3, "b": 29.3},
-    {"cc": 3, "L": 65.5, "a": -13.3, "b": 27.4},
-    {"cc": 4, "L": 59.3, "a": -12.1, "b": 24.5},
-    {"cc": 5, "L": 51.8, "a": -11.2, "b": 21.8},
-    {"cc": 6, "L": 45.9, "a": -10.7, "b": 18.8},
-    {"cc": 7, "L": 40.7, "a": -10.5, "b": 16.9},
-    {"cc": 8, "L": 36.3, "a": -10.5, "b": 14.8},
+    {'cc': 1, 'lab': [66.3, -18.0, 26.9]},
+    {'cc': 2, 'lab': [62.5, -14.9, 27.4]},
+    {'cc': 3, 'lab': [58.4, -11.9, 27.4]},
+    {'cc': 4, 'lab': [54.4, -10.7, 26.2]},
+    {'cc': 5, 'lab': [50.4, -8.5, 24.8]},
+    {'cc': 6, 'lab': [46.6, -7.3, 23.7]},
+    {'cc': 7, 'lab': [42.9, -6.2, 22.1]},
+    {'cc': 8, 'lab': [39.0, -5.2, 21.5]},
 ]
 
-# ΔE計算関数（CIE1976）
-def delta_e_cie1976_manual(lab1, lab2):
-    return round(math.sqrt(
-        (lab1[0] - lab2[0]) ** 2 +
-        (lab1[1] - lab2[1]) ** 2 +
-        (lab1[2] - lab2[2]) ** 2
-    ), 1)
+# Excelファイルから基準値を読み込む（ColorReaderPro_Apple_CC.xlsx）
+excel_path = "ColorReaderPro_Apple_CC.xlsx"
+df_excel = pd.read_excel(excel_path)
+cc_lab_excel = []
+for _, row in df_excel.iterrows():
+    try:
+        cc = int(row['CC値'])
+        lab = [float(row['L']), float(row['a']), float(row['b'])]
+        cc_lab_excel.append({'cc': cc, 'lab': lab})
+    except (ValueError, KeyError):
+        continue
+
+# 最も近いCCとΔE一覧を返す関数
+def find_closest_cc(input_lab, cc_lab_list):
+    delta_list = []
+    for item in cc_lab_list:
+        delta = calculate_delta_e(input_lab, item['lab'])
+        delta_list.append({'cc': item['cc'], 'delta': delta})
+    closest = min(delta_list, key=lambda x: x['delta'])
+    return round(closest['cc'], 1), closest, delta_list
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    cc_value_direct = None
-    cc_value_excel = None
-    closest_direct = None
-    closest_excel = None
-    delta_list_direct = []
-    delta_list_excel = []
-    input_lab = None
-
     if request.method == "POST":
-        # 入力取得
-        L = float(request.form["L"])
-        a = float(request.form["a"])
-        b = float(request.form["b"])
-        input_lab = [L, a, b]
+        try:
+            L = float(request.form["L"])
+            a = float(request.form["a"])
+            b = float(request.form["b"])
+            input_lab = [L, a, b]
 
-        # ΔE 計算とCC推定
-        cc_value_direct, closest_direct, delta_list_direct = find_closest_cc(input_lab, cc_list_direct)
-        cc_value_excel, closest_excel, delta_list_excel = find_closest_cc(input_lab, cc_list_excel)
+            # ΔE 計算とCC推定（両方）
+            cc_value_direct, closest_direct, delta_list_direct = find_closest_cc(input_lab, standard_lab_list)
+            cc_value_excel, closest_excel, delta_list_excel = find_closest_cc(input_lab, cc_lab_excel)
 
-    return render_template(
-        "index.html",
-        input_lab=input_lab,
-        cc_value_direct=cc_value_direct,
-        cc_value_excel=cc_value_excel,
-        delta_list_direct=delta_list_direct,
-        delta_list_excel=delta_list_excel,
-        closest_direct=closest_direct,
-        closest_excel=closest_excel
-    )
+            return render_template(
+                "index.html",
+                input_lab=input_lab,
+                cc_value_direct=cc_value_direct,
+                closest_direct=closest_direct,
+                delta_list_direct=delta_list_direct,
+                cc_value_excel=cc_value_excel,
+                closest_excel=closest_excel,
+                delta_list_excel=delta_list_excel
+            )
+        except ValueError:
+            return "入力値に誤りがあります。"
+    return render_template("index.html", input_lab=None)
 
 if __name__ == "__main__":
     app.run(debug=True)
