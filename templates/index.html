@@ -6,6 +6,7 @@
 </head>
 <body>
     <h1>リンゴ葉色CC評価ツール</h1>
+
     <form method="post">
         <label for="L">L値:</label>
         <input type="number" step="0.01" name="L" required><br>
@@ -20,7 +21,12 @@
         <h2>結果</h2>
         <p>入力値: L={{ input_lab[0] }}, a={{ input_lab[1] }}, b={{ input_lab[2] }}</p>
 
-        <table border="1" cellpadding="5" cellspacing="0">
+        <!-- 🔽 最も近いCC値の概要をテーブルの上に表示 -->
+        <p><strong>最も近い直接入力CC値:</strong> {{ closest_direct.cc }}（ΔE = {{ closest_direct.delta }}）</p>
+        <p><strong>最も近いExcel由来CC値:</strong> {{ closest_excel.cc }}（ΔE = {{ closest_excel.delta }}）</p>
+
+        <h3>各CC値とのΔE（色差）一覧</h3>
+        <table border="1" cellpadding="8">
             <tr>
                 <th colspan="2">直接入力CC</th>
                 <th colspan="2">Excel由来CC</th>
@@ -31,22 +37,15 @@
                 <th>CC値</th>
                 <th>ΔE</th>
             </tr>
-            {% for i in range(max_len) %}
+            {% for i in range(loop_max) %}
             <tr>
-                <td>{{ delta_list_direct[i].cc if i < delta_list_direct|length else "" }}</td>
-                <td>{{ delta_list_direct[i].delta if i < delta_list_direct|length else "" }}</td>
-                <td>{{ delta_list_excel[i].cc if i < delta_list_excel|length else "" }}</td>
-                <td>{{ delta_list_excel[i].delta if i < delta_list_excel|length else "" }}</td>
+                <td>{{ delta_list_direct[i].cc if i < delta_list_direct|length else '' }}</td>
+                <td>{{ delta_list_direct[i].delta if i < delta_list_direct|length else '' }}</td>
+                <td>{{ delta_list_excel[i].cc if i < delta_list_excel|length else '' }}</td>
+                <td>{{ delta_list_excel[i].delta if i < delta_list_excel|length else '' }}</td>
             </tr>
             {% endfor %}
         </table>
-
-        <p><strong>最も近い直接入力CC値: {{ closest_direct.cc }}（ΔE = {{ closest_direct.delta }}）</strong></p>
-        <p><strong>最も近いExcel由来CC値: {{ closest_excel.cc }}（ΔE = {{ closest_excel.delta }}）</strong></p>
-    {% endif %}
-
-    {% if error %}
-        <p style="color:red;">{{ error }}</p>
     {% endif %}
 </body>
 </html>

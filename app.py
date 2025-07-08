@@ -62,7 +62,7 @@ def index():
                 cc_value_excel=cc_value_excel,
                 closest_excel=closest_excel,
                 delta_list_excel=delta_list_excel,
-                max_len=max_len
+                loop_max=max(len(delta_list_direct), len(delta_list_excel)) 
             )
         except ValueError:
             return render_template("error.html", message="入力値に誤りがあります。")
