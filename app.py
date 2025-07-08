@@ -8,7 +8,22 @@ app = Flask(__name__)
 def calculate_delta_e(lab1, lab2):
     return round(math.sqrt(sum((a - b) ** 2 for a, b in zip(lab1, lab2))), 1)
 
-# 直接定義された基準Lab値（CC値1～8）
+
+#農水省論文の値（CC値1～8）
+standard_lab_list = [
+    {'cc': 1, 'lab': [45.11, -14.68, 21.59]},
+    {'cc': 2, 'lab': [42.70, -13.08, 18.31]},
+    {'cc': 3, 'lab': [36.82, -11.04, 15.37]},
+    {'cc': 4, 'lab': [33.40, -11.36, 13.37]},
+    {'cc': 5, 'lab': [31.06, -9.49, 11.18]},
+    {'cc': 6, 'lab': [28.95, -8.03, 9.26]},
+    {'cc': 7, 'lab': [24.68, -5.71, 6.22]},
+    {'cc': 8, 'lab': [22.86, -4.58, 4.17]},
+]
+
+
+"""
+#ハックナインの論文での実測データ
 standard_lab_list = [
     {'cc': 1, 'lab': [66.3, -18.0, 26.9]},
     {'cc': 2, 'lab': [62.5, -14.9, 27.4]},
@@ -19,7 +34,7 @@ standard_lab_list = [
     {'cc': 7, 'lab': [42.9, -6.2, 22.1]},
     {'cc': 8, 'lab': [39.0, -5.2, 21.5]},
 ]
-
+"""
 # Excelファイルから基準値を読み込む（ColorReaderPro_Apple_CC.xlsx）
 excel_path = "ColorReaderPro_Apple_CC.xlsx"
 excel_df = pd.read_excel(excel_path)

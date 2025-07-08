@@ -2,10 +2,10 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>リンゴ葉色CC評価ツール</title>
+    <title>リンゴ葉色CC値推定ツール</title>
 </head>
 <body>
-    <h1>リンゴ葉色CC評価ツール</h1>
+    <h1>リンゴ葉色CC値推定ツール</h1>
 
     <form method="post">
         <label for="L">L値:</label>
@@ -22,14 +22,14 @@
         <p>入力値: L={{ input_lab[0] }}, a={{ input_lab[1] }}, b={{ input_lab[2] }}</p>
 
         <!-- 🔽 最も近いCC値の概要をテーブルの上に表示 -->
-        <p><strong>最も近い直接入力CC値:</strong> {{ closest_direct.cc }}（ΔE = {{ closest_direct.delta }}）</p>
-        <p><strong>最も近いExcel由来CC値:</strong> {{ closest_excel.cc }}（ΔE = {{ closest_excel.delta }}）</p>
+        <p><strong>最も近い農水CC値:</strong> {{ closest_direct.cc }}（ΔE = {{ closest_direct.delta }}）</p>
+        <p><strong>最も近いカラーチェッカー値:</strong> {{ closest_excel.cc }}（ΔE = {{ closest_excel.delta }}）</p>
 
         <h3>各CC値とのΔE（色差）一覧</h3>
         <table border="1" cellpadding="8">
             <tr>
-                <th colspan="2">直接入力CC</th>
-                <th colspan="2">Excel由来CC</th>
+                <th colspan="2">農水CC値</th>
+                <th colspan="2">カラーチェッカー値</th>
             </tr>
             <tr>
                 <th>CC値</th>
