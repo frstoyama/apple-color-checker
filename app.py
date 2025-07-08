@@ -22,15 +22,13 @@ standard_lab_list = [
 
 # Excelファイルから基準値を読み込む（ColorReaderPro_Apple_CC.xlsx）
 excel_path = "ColorReaderPro_Apple_CC.xlsx"
-df_excel = pd.read_excel(excel_path)
+excel_df = pd.read_excel(excel_path)
 cc_lab_excel = []
-for _, row in df_excel.iterrows():
-    try:
-        cc = int(row['CC値'])
-        lab = [float(row['L']), float(row['a']), float(row['b'])]
-        cc_lab_excel.append({'cc': cc, 'lab': lab})
-    except (ValueError, KeyError):
-        continue
+for _, row in excel_df.iterrows():
+    cc_lab_excel.append({
+        "cc": int(row["CC_No"]),
+        "lab": [float(row["L"]), float(row["a"]), float(row["b"])]
+    })
 
 # 最も近いCCとΔE一覧を返す関数
 def find_closest_cc(input_lab, cc_lab_list):
