@@ -49,23 +49,25 @@ def index():
             a = float(request.form["a"])
             b = float(request.form["b"])
             input_lab = [L, a, b]
-        except (ValueError, KeyError):
+
+            cc_value_direct, closest_direct, delta_list_direct = find_closest_cc(input_lab, standard_lab_list)
+            cc_value_excel, closest_excel, delta_list_excel = find_closest_cc(input_lab, cc_lab_excel)
+
+            return render_template(
+                "index.html",
+                input_lab=input_lab,
+                cc_value_direct=cc_value_direct,
+                closest_direct=closest_direct,
+                delta_list_direct=delta_list_direct,
+                cc_value_excel=cc_value_excel,
+                closest_excel=closest_excel,
+                delta_list_excel=delta_list_excel
+            )
+        except ValueError:
             return render_template("index.html", input_lab=None, error="入力値に誤りがあります。")
 
-        # tryの外で本処理（エラー時のトレースもわかりやすくなる）
-        cc_value_direct, closest_direct, delta_list_direct = find_closest_cc(input_lab, standard_lab_list)
-        cc_value_excel, closest_excel, delta_list_excel = find_closest_cc(input_lab, cc_lab_excel)
-
-        return render_template(
-            "index.html",
-            input_lab=input_lab,
-            cc_value_direct=cc_value_direct,
-            closest_direct=closest_direct,
-            delta_list_direct=delta_list_direct,
-            cc_value_excel=cc_value_excel,
-            closest_excel=closest_excel,
-            delta_list_excel=delta_list_excel
-        )
+    # GET時に必ずHTMLを返す
+    return render_template("index.html", input_lab=None)
 
 if __name__ == "__main__":
     app.run(debug=True)
