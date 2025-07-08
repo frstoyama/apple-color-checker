@@ -51,6 +51,8 @@ def index():
             cc_value_direct, closest_direct, delta_list_direct = find_closest_cc(input_lab, standard_lab_list)
             cc_value_excel, closest_excel, delta_list_excel = find_closest_cc(input_lab, cc_lab_excel)
 
+            max_len = max(len(delta_list_direct), len(delta_list_excel))
+
             return render_template(
                 "index.html",
                 input_lab=input_lab,
@@ -60,6 +62,7 @@ def index():
                 cc_value_excel=cc_value_excel,
                 closest_excel=closest_excel,
                 delta_list_excel=delta_list_excel
+                max_len=max_len
             )
         except ValueError:
             return render_template("index.html", input_lab=None, error="入力値に誤りがあります。")
