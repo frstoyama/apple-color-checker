@@ -16,25 +16,27 @@
         <input type="submit" value="評価">
     </form>
 
-    {% if cc_value is not none and cc_value_excel is not none %}
+    {% if input_lab %}
         <h2>結果</h2>
         <p>入力値: L={{ input_lab[0] }}, a={{ input_lab[1] }}, b={{ input_lab[2] }}</p>
-        <p>推定CC値（標準値に基づく）: <strong>{{ cc_value }}</strong></p>
-        <p>推定CC値（Excelファイルに基づく）: <strong>{{ cc_value_excel }}</strong></p>
 
-        <h3>ΔE（色差）一覧（標準値）</h3>
+        <h3>直接入力CCとのΔE</h3>
         <ul>
-        {% for level, delta in delta_e_std.items() %}
-            <li>CC{{ level }}: ΔE = {{ delta|round(2) }}</li>
+        {% for d in deltas_direct %}
+            <li>CC値 {{ d.cc }}: ΔE = {{ d.delta }}</li>
         {% endfor %}
         </ul>
+        <p><strong>最も近い直接入力CC値: {{ closest_direct.cc }}（ΔE = {{ closest_direct.delta }}）</strong></p>
 
-        <h3>ΔE（色差）一覧（Excel値）</h3>
+        {% if deltas_excel %}
+        <h3>Excel由来CCとのΔE</h3>
         <ul>
-        {% for level, delta in delta_e_excel.items() %}
-            <li>CC{{ level }}: ΔE = {{ delta|round(2) }}</li>
+        {% for d in deltas_excel %}
+            <li>CC値 {{ d.cc }}: ΔE = {{ d.delta }}</li>
         {% endfor %}
         </ul>
+        <p><strong>最も近いExcel由来CC値: {{ closest_excel.cc }}（ΔE = {{ closest_excel.delta }}）</strong></p>
+        {% endif %}
     {% endif %}
 </body>
 </html>
