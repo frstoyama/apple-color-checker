@@ -70,10 +70,12 @@ def index():
     return render_template(
         "index.html",
         input_lab=input_lab,
-        cc_value_manual=cc_value_manual,
+        cc_value_direct=cc_value_direct,
         cc_value_excel=cc_value_excel,
-        delta_e_manual_list=delta_e_manual_list,
-        delta_e_excel_list=delta_e_excel_list
+        delta_list_direct=delta_list_direct,
+        delta_list_excel=delta_list_excel,
+        closest_direct=closest_direct,
+        closest_excel=closest_excel
     )
 
 if __name__ == "__main__":
