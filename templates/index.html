@@ -126,16 +126,16 @@
                 <th>推定CC値</th>
                 <th>操作</th>
             </tr>
-            {% for idx, record in history|enumerate(start=1) %}
+            {% for record in history %}
             <tr>
-                <td>{{ idx }}</td>
+                <td>{{ loop.index }}</td>  
                 <td>{{ record.L }}</td>
                 <td>{{ record.a }}</td>
                 <td>{{ record.b }}</td>
                 <td>{{ record.delta }}</td>
                 <td>{{ record.estimated_cc }}</td>
                 <td>
-                    <form method="post" action="{{ url_for('delete', index=idx-1) }}">
+                    <form method="post" action="{{ url_for('delete', index=loop.index0) }}">
                         <button type="submit">削除</button>
                     </form>
                 </td>
