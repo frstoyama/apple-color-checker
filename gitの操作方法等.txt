@@ -9,14 +9,14 @@ Shift + Insert を押すと貼り付きます
 
 
 
-cd /d/03_apple_cc/20250707
+cd /d/03_apple_cc/20250708
 git init
 
 # 🔽 ここで一度だけ設定すればOK！
 git config --global user.name "frstoyama"
 git config --global user.email "frstoyama@gmail.com"
 
-git config --global --add safe.directory D:/03_apple_cc/20250707
+git config --global --add safe.directory D:/03_apple_cc/20250708
 git add .
 git commit -m "first commit"
 git branch -M main

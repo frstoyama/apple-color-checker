@@ -2,47 +2,143 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>リンゴ葉色CC値推定ツール</title>
+    <title>リンゴ葉色CC評価ツール</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        input[type="number"] {
+            width: 200px;
+            height: 35px;
+            font-size: 18px;
+        }
+
+        input[type="submit"], button {
+            height: 40px;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+
+        .estimated-cc {
+            font-size: 26px;
+            color: #2d662d;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        .average-display {
+            font-size: 20px;
+            margin: 10px 0;
+        }
+
+        table {
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        table, th, td {
+            border: 1px solid black;
+            padding: 8px 14px;
+            text-align: center;
+        }
+
+        .history-table th {
+            background-color: #f2f2f2;
+        }
+
+        .horizontal-table td, .horizontal-table th {
+            min-width: 80px;
+        }
+    </style>
 </head>
 <body>
-    <h1>リンゴ葉色CC値推定ツール</h1>
+    <h1>リンゴ葉色CC評価ツール</h1>
 
     <form method="post">
-        <label for="L">L値:</label>
+        <label for="L">L値:</label><br>
         <input type="number" step="0.01" name="L" required><br>
-        <label for="a">a値:</label>
+        <label for="a">a値:</label><br>
         <input type="number" step="0.01" name="a" required><br>
-        <label for="b">b値:</label>
+        <label for="b">b値:</label><br>
         <input type="number" step="0.01" name="b" required><br>
-        <input type="submit" value="評価">
+        <input type="submit" value="CC値推定">
     </form>
 
     {% if input_lab %}
         <h2>結果</h2>
         <p>入力値: L={{ input_lab[0] }}, a={{ input_lab[1] }}, b={{ input_lab[2] }}</p>
 
-        <!-- 🔽 最も近いCC値の概要をテーブルの上に表示 -->
-        <p><strong>最も近い農水CC値:</strong> {{ closest_direct.cc }}（ΔE = {{ closest_direct.delta }}）</p>
-        <p><strong>最も近いカラーチェッカー値:</strong> {{ closest_excel.cc }}（ΔE = {{ closest_excel.delta }}）</p>
+        <p class="estimated-cc">推定CC値: {{ estimated_cc }}</p>
 
-        <h3>各CC値とのΔE（色差）一覧</h3>
-        <table border="1" cellpadding="8">
+        <h3>農林水産省CCとのΔE</h3>
+        {% if delta_list_direct %}
+            <table class="horizontal-table">
+                <tr>
+                    <th>CC値</th>
+                    {% for d in delta_list_direct %}
+                        <td>{{ d.cc }}</td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <th>ΔE</th>
+                    {% for d in delta_list_direct %}
+                        <td>{{ "%.2f"|format(d.delta) }}</td>
+                    {% endfor %}
+                </tr>
+            </table>
+        {% else %}
+            <p>ΔEデータがありません。</p>
+        {% endif %}
+    {% endif %}
+
+    {% if average_lab %}
+        <p class="average-display">📊 Lab平均値 → L={{ average_lab[0] }}, a={{ average_lab[1] }}, b={{ average_lab[2] }}</p>
+    {% endif %}
+
+    {% if average_cc %}
+        <p class="average-display">📈 CC推定値の平均 → {{ average_cc }}</p>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('average_cc') }}">
+        <button type="submit">CC平均値の表示</button>
+    </form>
+
+    <form method="post" action="{{ url_for('clear') }}">
+        <button type="submit">🧹 履歴全削除</button>
+    </form>
+
+    {% if history %}
+        <h3>履歴</h3>
+        <table class="history-table">
             <tr>
-                <th colspan="2">農水CC値</th>
-                <th colspan="2">カラーチェッカー値</th>
-            </tr>
-            <tr>
-                <th>CC値</th>
+                <th>No</th>
+                <th>L</th>
+                <th>a</th>
+                <th>b</th>
                 <th>ΔE</th>
-                <th>CC値</th>
-                <th>ΔE</th>
+                <th>推定CC値</th>
+                <th>操作</th>
             </tr>
-            {% for i in range(loop_max) %}
+            {% for idx, record in history|enumerate(start=1) %}
             <tr>
-                <td>{{ delta_list_direct[i].cc if i < delta_list_direct|length else '' }}</td>
-                <td>{{ delta_list_direct[i].delta if i < delta_list_direct|length else '' }}</td>
-                <td>{{ delta_list_excel[i].cc if i < delta_list_excel|length else '' }}</td>
-                <td>{{ delta_list_excel[i].delta if i < delta_list_excel|length else '' }}</td>
+                <td>{{ idx }}</td>
+                <td>{{ record.L }}</td>
+                <td>{{ record.a }}</td>
+                <td>{{ record.b }}</td>
+                <td>{{ record.delta }}</td>
+                <td>{{ record.estimated_cc }}</td>
+                <td>
+                    <form method="post" action="{{ url_for('delete', index=idx-1) }}">
+                        <button type="submit">削除</button>
+                    </form>
+                </td>
             </tr>
             {% endfor %}
         </table>
