@@ -1,5 +1,14 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from math import sqrt
+#Δeの計算に使用
+from colormath.color_objects import LabColor
+from colormath.color_diff import delta_e_cie2000
+
+import numpy as np
+# numpy.asscalar がない場合、item()で代替
+if not hasattr(np, 'asscalar'):
+    np.asscalar = lambda a: a.item()
+
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key'  # セッションを有効にするためのキー
@@ -17,8 +26,10 @@ standard_lab_list = [
 ]
 
 # ΔE（CIE76）を計算する関数
-def delta_e_cie76(lab1, lab2):
-    return sqrt(sum((a - b) ** 2 for a, b in zip(lab1, lab2)))
+def delta_e_cie2000_func(lab1, lab2):
+    color1 = LabColor(lab_l=lab1[0], lab_a=lab1[1], lab_b=lab1[2])
+    color2 = LabColor(lab_l=lab2[0], lab_a=lab2[1], lab_b=lab2[2])
+    return delta_e_cie2000(color1, color2)
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -41,13 +52,21 @@ def index():
             # ΔE計算
             delta_list_direct = []
             for ref in standard_lab_list:
-                delta = delta_e_cie76(input_lab, ref["lab"])
+                delta = delta_e_cie2000_func(input_lab, ref["lab"])
                 delta_list_direct.append({"cc": ref["cc"], "delta": delta})
 
-            # ΔE最小のCC値を推定
-            min_item = min(delta_list_direct, key=lambda x: x["delta"])
-            estimated_cc = min_item["cc"]
-            delta_value = round(min_item["delta"], 2)
+            # 🔧 推定CC値を小数点で補間（ΔE最小の2点を線形補間）
+            delta_list_direct.sort(key=lambda x: x["delta"])
+            first, second = delta_list_direct[:2]
+            d1, d2 = first["delta"], second["delta"]
+            cc1, cc2 = first["cc"], second["cc"]
+
+            if d1 + d2 == 0:
+                estimated_cc = float(cc1)
+            else:
+                estimated_cc = round((cc2 * d1 + cc1 * d2) / (d1 + d2), 1)
+
+            delta_value = round(d1, 2)
 
             # 履歴追加
             history.append({
@@ -62,7 +81,7 @@ def index():
             session.pop('average_cc', None)
 
         except ValueError:
-            pass  # 入力エラーなどは無視（必要に応じてエラー表示可）
+            pass  # 入力エラー
 
     return render_template(
         "index.html",

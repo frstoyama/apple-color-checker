@@ -1,22 +1,20 @@
+
+
+
 Git Bash 上での操作コマンド一覧
 スタートメニューで「Git Bash」を検索して起動
-✅ 方法①：Shift + Insert（おすすめ）
-コピーしたいコマンドをCtrl+Cでコピー
-
-Git Bashにカーソルを合わせて
-
-Shift + Insert を押すと貼り付きます
+貼付けは　Shift + Insert
 
 
 
-cd /d/03_apple_cc/20250708
+cd /d/03_apple_leaf_acc/01_app_txt/20250708/
 git init
 
 # 🔽 ここで一度だけ設定すればOK！
 git config --global user.name "frstoyama"
 git config --global user.email "frstoyama@gmail.com"
 
-git config --global --add safe.directory D:/03_apple_cc/20250708
+git config --global --add safe.directory D:/03_apple_cc/01_app_txt/20250708
 git add .
 git commit -m "first commit"
 git branch -M main

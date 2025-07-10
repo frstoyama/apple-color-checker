@@ -2,3 +2,4 @@ flask
 pandas
 openpyxl
 gunicorn
+colormath>=3.0.0
